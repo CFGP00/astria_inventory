@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
-
 st.set_page_config(page_title="SharePoint File Explorer", layout="wide")
 st.title("📁 SharePoint File Explorer")
 
@@ -20,7 +19,7 @@ if uploaded_file is not None:
         df = pd.json_normalize(data)
 
         # Check required columns
-        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}"]
+        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}","Editor.DisplayName"]
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             st.error(f"Missing expected columns in JSON: {missing_columns}")
@@ -28,7 +27,7 @@ if uploaded_file is not None:
 
         # Rename columns for display
         df_filtered = df[required_columns].copy()
-        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension"]
+        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension","LastEditedBy"]
         df_filtered["Modified"] = pd.to_datetime(df_filtered["Modified"])
 
         # Classify file types
@@ -55,7 +54,6 @@ if uploaded_file is not None:
             name_filter = st.text_input("Search by name")
             type_filter = st.selectbox("Show:", ["All", "Files only", "Folders only"])
             filetype_filter = st.multiselect("File type", options=sorted(df_filtered["FileType"].unique()))
-            date_range = st.date_input("Modified date range", [])
 
         # Apply filters
         if name_filter:
@@ -69,16 +67,16 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        if isinstance(date_range, list) and len(date_range) == 2:
-            start_date, end_date = pd.to_datetime(date_range)
-            df_filtered = df_filtered[(df_filtered["Modified"] >= start_date) & (df_filtered["Modified"] <= end_date)]
-
         # Display results
-        st.markdown(f"### 📄 {len(df_filtered)} items found")
-        st.dataframe(df_filtered[["Name", "FileType", "IsFolder", "Modified", "Link"]].reset_index(drop=True))
+        
+        df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
+        df_display["Link"] = df_display["Link"].apply(lambda url: f'<a href="{url}" target="_blank">Open</a>')
+        st.dataframe(df_display, use_container_width=True)
+
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
+
 
