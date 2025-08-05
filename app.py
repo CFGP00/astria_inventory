@@ -68,16 +68,26 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Prepare display DataFrame
-        df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
-        df_display["Link"] = df_display["Link"].apply(lambda url: f'Open')
-
-        # Display the table
-        st.dataframe(df_display, use_container_width=True)
+        # Display results manually with clickable links
+        st.write("### 📄 Filtered Results")
+        for _, row in df_filtered.iterrows():
+            st.markdown(
+                f"""
+                **Name**: {row['Name']}  
+                **File Type**: {row['FileType']}  
+                **Is Folder**: {"Yes" if row['IsFolder'] else "No"}  
+                **Modified**: {row['Modified'].strftime('%Y-%m-%d %H:%M')}  
+                **Last Edited By**: {row['LastEditedBy']}  
+                **Link**: Open  
+                ---
+                """,
+                unsafe_allow_html=True
+            )
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
+
 
 
