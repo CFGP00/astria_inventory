@@ -68,51 +68,16 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Display results using custom HTML table
-        st.write("### 📄 Filtered Results")
-        html_table = """
-        <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        </style>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>File Type</th>
-                <th>Is Folder</th>
-                <th>Modified</th>
-                <th>Last Edited By</th>
-                <th>Link</th>
-            </tr>
-        """
+        # Prepare display DataFrame
+        df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
+        df_display["Link"] = df_display["Link"].apply(lambda url: f'Open')
 
-        for _, row in df_filtered.iterrows():
-            html_table += f"""
-            <tr>
-                <td>{row['Name']}</td>
-                <td>{row['FileType']}</td>
-                <td>{'Yes' if row['IsFolder'] else 'No'}</td>
-                <td>{row['Modified'].strftime('%Y-%m-%d %H:%M')}</td>
-                <td>{row['LastEditedBy']}</td>
-                <td><a href="{row['Link']}" target="_blank">Open</a></td>
-            </tr>
-            """
-
-        html_table += "</table>"
-        st.write(html_table, unsafe_allow_html=True)
+        # Display the table
+        st.dataframe(df_display, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
+
 
