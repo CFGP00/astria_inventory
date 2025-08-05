@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
+
 st.set_page_config(page_title="SharePoint File Explorer", layout="wide")
 st.title("📁 SharePoint File Explorer")
 
-# File uploader
 uploaded_file = st.file_uploader("Upload a SharePoint JSON file", type="json")
 
 if uploaded_file is not None:
@@ -18,19 +18,16 @@ if uploaded_file is not None:
         data = raw_data["value"]
         df = pd.json_normalize(data)
 
-        # Check required columns
-        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}","Editor.DisplayName"]
+        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}", "Editor.DisplayName"]
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             st.error(f"Missing expected columns in JSON: {missing_columns}")
             st.stop()
 
-        # Rename columns for display
         df_filtered = df[required_columns].copy()
-        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension","LastEditedBy"]
+        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension", "LastEditedBy"]
         df_filtered["Modified"] = pd.to_datetime(df_filtered["Modified"])
 
-        # Classify file types
         def classify_file_type(filename):
             if not isinstance(filename, str):
                 return "Other"
@@ -48,14 +45,12 @@ if uploaded_file is not None:
 
         df_filtered["FileType"] = df_filtered["FilenameWithExtension"].apply(classify_file_type)
 
-        # Filters
         with st.sidebar:
             st.header("🔍 Filters")
             name_filter = st.text_input("Search by name")
             type_filter = st.selectbox("Show:", ["All", "Files only", "Folders only"])
             filetype_filter = st.multiselect("File type", options=sorted(df_filtered["FileType"].unique()))
 
-        # Apply filters
         if name_filter:
             df_filtered = df_filtered[df_filtered["Name"].str.contains(name_filter, case=False, na=False)]
 
@@ -67,12 +62,11 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Display results
-        
         df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
         df_display["Link"] = df_display["Link"].apply(lambda url: f'<a href="{url}" target="_blank">Open</a>')
-        st.dataframe(df_display, use_container_width=True)
 
+        st.write("### 📄 Filtered Results")
+        st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
