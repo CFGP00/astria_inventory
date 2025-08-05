@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
+
 st.set_page_config(page_title="SharePoint File Explorer", layout="wide")
 st.title("📁 SharePoint File Explorer")
 
@@ -19,7 +20,7 @@ if uploaded_file is not None:
         df = pd.json_normalize(data)
 
         # Check required columns
-        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}","Editor.DisplayName"]
+        required_columns = ["{Name}", "{Link}", "{IsFolder}", "Modified", "{FilenameWithExtension}", "Editor.DisplayName"]
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             st.error(f"Missing expected columns in JSON: {missing_columns}")
@@ -27,7 +28,7 @@ if uploaded_file is not None:
 
         # Rename columns for display
         df_filtered = df[required_columns].copy()
-        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension","LastEditedBy"]
+        df_filtered.columns = ["Name", "Link", "IsFolder", "Modified", "FilenameWithExtension", "LastEditedBy"]
         df_filtered["Modified"] = pd.to_datetime(df_filtered["Modified"])
 
         # Classify file types
@@ -67,16 +68,51 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Display results
-        
-        df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
-        df_display["Link"] = df_display["Link"].apply(lambda url: f'<a href="{url}" target="_blank">Open</a>')
-        st.dataframe(df_display, use_container_width=True)
+        # Display results using custom HTML table
+        st.write("### 📄 Filtered Results")
+        html_table = """
+        <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        </style>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>File Type</th>
+                <th>Is Folder</th>
+                <th>Modified</th>
+                <th>Last Edited By</th>
+                <th>Link</th>
+            </tr>
+        """
 
+        for _, row in df_filtered.iterrows():
+            html_table += f"""
+            <tr>
+                <td>{row['Name']}</td>
+                <td>{row['FileType']}</td>
+                <td>{'Yes' if row['IsFolder'] else 'No'}</td>
+                <td>{row['Modified'].strftime('%Y-%m-%d %H:%M')}</td>
+                <td>{row['LastEditedBy']}</td>
+                <td><a href="{row['Link']}" target="_blank">Open</a></td>
+            </tr>
+            """
+
+        html_table += "</table>"
+        st.write(html_table, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
-
 
