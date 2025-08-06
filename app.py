@@ -50,6 +50,7 @@ if uploaded_file is not None:
             name_filter = st.text_input("Search by name")
             type_filter = st.selectbox("Show:", ["All", "Files only", "Folders only"])
             filetype_filter = st.multiselect("File type", options=sorted(df_filtered["FileType"].unique()))
+            sort_order = st.radio("Sort by Modified Date", ["Newest first", "Oldest first"])
 
         if name_filter:
             df_filtered = df_filtered[df_filtered["Name"].str.contains(name_filter, case=False, na=False)]
@@ -62,20 +63,22 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Sort by most recently modified
-        df_filtered = df_filtered.sort_values(by="Modified", ascending=False)
+        # Apply sorting
+        ascending = sort_order == "Oldest first"
+        df_filtered = df_filtered.sort_values(by="Modified", ascending=ascending)
 
         # Prepare display DataFrame
         df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
         df_display["Link"] = df_display["Link"].apply(lambda url: f'<a href="{url}" target="_blank">Open</a>')
 
-        st.write("### 📄 Filtered Results (Sorted by Most Recently Modified)")
+        st.write("### 📄 Filtered Results")
         st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
+
 
 
 
