@@ -62,10 +62,14 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
+        # Sort by most recently modified
+        df_filtered = df_filtered.sort_values(by="Modified", ascending=False)
+
+        # Prepare display DataFrame
         df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
         df_display["Link"] = df_display["Link"].apply(lambda url: f'<a href="{url}" target="_blank">Open</a>')
 
-        st.write("### 📄 Filtered Results")
+        st.write("### 📄 Filtered Results (Sorted by Most Recently Modified)")
         st.write(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     except Exception as e:
