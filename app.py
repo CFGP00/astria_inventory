@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
-from streamlit.column_config import MarkdownColumn
+from streamlit.column_config import LinkColumn
 
 st.set_page_config(page_title="SharePoint File Explorer", layout="wide")
 st.title("📁 SharePoint File Explorer")
@@ -63,16 +63,14 @@ if uploaded_file is not None:
         if filetype_filter:
             df_filtered = df_filtered[df_filtered["FileType"].isin(filetype_filter)]
 
-        # Prepare display DataFrame
         df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
-        df_display["Link"] = df_display["Link"].apply(lambda url: f"Open")
 
         st.write("### 📄 Filtered Results (Click column headers to sort)")
         st.data_editor(
             df_display,
             use_container_width=True,
             column_config={
-                "Link": MarkdownColumn("Link")
+                "Link": LinkColumn("Link")
             },
             disabled=True
         )
