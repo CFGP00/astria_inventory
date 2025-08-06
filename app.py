@@ -64,16 +64,16 @@ if uploaded_file is not None:
 
         # Prepare display DataFrame
         df_display = df_filtered[["Name", "FileType", "IsFolder", "Modified", "LastEditedBy", "Link"]].copy()
-        df_display["Link"] = df_display["Link"].apply(lambda url: f"Open")
 
-        st.write("### 📄 Filtered Results ")
-        st.data_editor(df_display, use_container_width=True, disabled=True)
-
+        st.write("### 📄 Filtered Results (Click column headers to sort)")
+        st.dataframe(df_display, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
 else:
     st.info("Please upload a SharePoint JSON file to begin.")
+
+
 
 
 
